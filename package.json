@@ -1,5 +1,5 @@
 {
-  "name": "boar-dashboard",
+  "name": "file-server",
   "version": "1.0.0",
   "description": "to handle s3 file retrieval and database api",
   "main": "index.js",
