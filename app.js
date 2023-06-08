@@ -55,26 +55,31 @@ app.get("/api/day/", (req, res) => {
 });
 
 app.get("/api/days_back/", (req, res) => {
-  const lr =
-    new Date(
-      `${
-        new Date(Number(req.query.timestamp)).toISOString().split("T")[0]
-      }T00:00:00Z`
-    ).getTime() -
-    req.query.daysback * (3600 * 24 * 1000);
+  const lr = new Date(
+    `${
+      new Date(Number(req.query.timestamp)).toISOString().split("T")[0]
+    }T00:00:00Z`
+  ).getTime();
+
+  const keys = [];
+  for (let i = 0; i < req.query.daysback; i++) {
+    keys.push(
+      new Date(lr - i * (3600 * 24 * 1000))
+        .toISOString()
+        .split("T")[0]
+        .split("-")
+        .join("")
+    );
+  }
 
   // get from dynamodb
-  readDB_func({
+  readDB_func_recur({
     res: res,
-    lowerRange: lr.toString(),
+    keys: keys,
+    items: [],
+    lowerRange: (lr - req.query.daysback * (3600 * 24 * 1000)).toString(),
     upperRange: (lr + 3600 * 24 * 1000).toString(),
     func: (props) => {
-      // return props.data_.map((data) => {
-      //   return {
-      //     spotHour: Math.floor((data.spotTime.N - props.lowerRange) / 3600000),
-      //     num_sighting: data.num_sighting,
-      //   };
-      // });
       let sum = 0;
       for (let i = 0; i < props.data_.length; i++) {
         sum = sum + Number(props.data_[i]?.num_sighting.N);
