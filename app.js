@@ -55,42 +55,49 @@ app.get("/api/day/", (req, res) => {
 });
 
 app.get("/api/days_back/", (req, res) => {
-  const lr = new Date(
-    `${
-      new Date(Number(req.query.timestamp)).toISOString().split("T")[0]
-    }T00:00:00Z`
-  ).getTime();
+  if (Number(req.query.daysback) <= 0) {
+    res.send([]);
+  } else {
+    const lr = new Date(
+      `${
+        new Date(Number(req.query.timestamp)).toISOString().split("T")[0]
+      }T00:00:00Z`
+    ).getTime();
 
-  const keys = [];
-  for (let i = 0; i < req.query.daysback; i++) {
-    keys.push(
-      new Date(lr - i * (3600 * 24 * 1000))
-        .toISOString()
-        .split("T")[0]
-        .split("-")
-        .join("")
-    );
+    const keys = [];
+    for (let i = 0; i < Number(req.query.daysback); i++) {
+      keys.push(
+        new Date(lr - i * (3600 * 24 * 1000))
+          .toISOString()
+          .split("T")[0]
+          .split("-")
+          .join("")
+      );
+    }
+
+    // get from dynamodb
+    readDB_func_recur({
+      res: res,
+      keys: keys,
+      items: [],
+      lowerRange: (
+        lr -
+        Number(req.query.daysback) * (3600 * 24 * 1000)
+      ).toString(),
+      upperRange: (lr + 3600 * 24 * 1000).toString(),
+      func: (props) => {
+        let sum = 0;
+        for (let i = 0; i < props.data_.length; i++) {
+          sum = sum + Number(props.data_[i]?.num_sighting.N);
+        }
+        if (props.data_.length > 0) {
+          return [{ date: props.data_[0].id.N, num_sighting: sum }];
+        } else {
+          return [];
+        }
+      },
+    });
   }
-
-  // get from dynamodb
-  readDB_func_recur({
-    res: res,
-    keys: keys,
-    items: [],
-    lowerRange: (lr - req.query.daysback * (3600 * 24 * 1000)).toString(),
-    upperRange: (lr + 3600 * 24 * 1000).toString(),
-    func: (props) => {
-      let sum = 0;
-      for (let i = 0; i < props.data_.length; i++) {
-        sum = sum + Number(props.data_[i]?.num_sighting.N);
-      }
-      if (props.data_.length > 0) {
-        return [{ id: props.data_[0].id.N, num_sighting: sum }];
-      } else {
-        return [];
-      }
-    },
-  });
 });
 
 app.put("/api/", (req, res) => {
