@@ -1,6 +1,8 @@
 const express = require("express");
 const { uploadS3, downloadS3 } = require("./src/s3");
 const { readDB, writeDB, readDB_func, readDB_func_recur } = require("./src/db");
+const { getHls } = require("./src/hls");
+var cors = require("cors");
 const multer = require("multer");
 
 const fs = require("fs");
@@ -10,7 +12,8 @@ const unlink = util.promisify(fs.unlink);
 const upload = multer({ dest: "uploads/" });
 
 const app = express();
-const port = 3000;
+app.use(cors());
+const port = 8080;
 
 app.get("/image/download/:filename", (req, res) => {
   const filename = req.params.filename;
@@ -30,12 +33,12 @@ app.get("/api/", (req, res) => {
   readDB({ res: res, lowerRange: lr, upperRange: ur });
 });
 
-app.get("/api/day/", (req, res) => {
-  const lr = new Date(
-    `${
-      new Date(Number(req.query.timestamp)).toISOString().split("T")[0]
-    }T00:00:00Z`
-  ).getTime();
+/**
+ * To get timestamps of image captions
+ * These timestamps can then be used to query from database.
+ */
+app.get("/api/day_image/", (req, res) => {
+  const lr = req.query.timestamp;
   const ur = lr + 3600 * 24 * 1000;
 
   // get from dynamodb
@@ -44,16 +47,14 @@ app.get("/api/day/", (req, res) => {
     lowerRange: lr.toString(),
     upperRange: ur.toString(),
     func: (props) => {
-      return props.data_.map((data) => {
-        return {
-          spotHour: Math.floor((data.spotTime.N - props.lowerRange) / 3600000),
-          num_sighting: data.num_sighting,
-        };
-      });
+      return props.data_.map((data) => data.spotTime.N);
     },
   });
 });
 
+/**
+ * To get number of boar sightings on each day starting from timestamp to # of days back.
+ */
 app.get("/api/days_back/", (req, res) => {
   if (Number(req.query.daysback) <= 0) {
     res.send([]);
@@ -100,8 +101,10 @@ app.get("/api/days_back/", (req, res) => {
   }
 });
 
+/**
+ * To insert boar sigthing into database.
+ */
 app.put("/api/", (req, res) => {
-  const da = req.query.date;
   const timestamp = req.query.timestamp;
   const num_sighting = req.query.num_sighting;
   // add to dynamo db
@@ -110,6 +113,29 @@ app.put("/api/", (req, res) => {
     num_sighting: num_sighting,
     timestamp: timestamp,
   });
+});
+
+const farm_details = {
+  farm_1: {
+    camera_1: {
+      stream_arn:
+        "arn:aws:kinesisvideo:ap-southeast-1:733421296020:stream/boar_camera_inhouse_2/1685341936560",
+    },
+  },
+};
+
+app.get("/camera/:farm_id/:camera_id", (req, res) => {
+  const farm_id = req.params.farm_id;
+  const camera_id = req.params.camera_id;
+
+  if (farm_details[farm_id] !== undefined) {
+    if (farm_details[farm_id][camera_id] !== undefined) {
+      getHls({
+        streamARN: farm_details[farm_id][camera_id].stream_arn,
+        res: res,
+      });
+    }
+  }
 });
 
 app.listen(port, () => {
