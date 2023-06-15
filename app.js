@@ -12,11 +12,11 @@ const unlink = util.promisify(fs.unlink);
 
 const upload = multer({ dest: "uploads/" });
 
+const port = 8080;
+let timeme = 0;
+
 const app = express();
 app.use(cors());
-const port = 8080;
-
-let timeme = 0;
 
 app.get("/image/download/:filename", (req, res) => {
   const filename = req.params.filename;
