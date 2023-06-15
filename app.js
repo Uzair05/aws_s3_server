@@ -23,11 +23,11 @@ app.get("/image/download/:filename", (req, res) => {
   downloadS3({ originalname: filename, res: res });
 });
 
-app.post("/image/upload/", upload.single("image"), async (req, res) => {
-  const result = await uploadS3(req.file);
-  await unlink(req.file.path);
-  res.send(JSON.stringify(result));
-});
+// app.post("/image/upload/", upload.single("image"), async (req, res) => {
+//   const result = await uploadS3(req.file);
+//   await unlink(req.file.path);
+//   res.send(JSON.stringify(result));
+// });
 
 app.get("/api/", (req, res) => {
   const ur = req.query.upperLimit;

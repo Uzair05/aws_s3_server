@@ -17,7 +17,7 @@ const s3 = new S3({
 const db_client = new DynamoDB({});
 
 module.exports = {
-  uploadS3: (props) => {
+  /* uploadS3: (props) => {
     const filestream = fs.createReadStream(props.path);
     const uploadParams = {
       Bucket: AWS_BUCKET_NAME,
@@ -40,29 +40,13 @@ module.exports = {
       .catch((err) => console.log(`Write Fail: ${err}`));
 
     return s3.upload(uploadParams).promise();
-  },
+  }, */
 
   downloadS3: (props) => {
-    const readParams = {
-      TableName: AWS_DYNAMODB_TABLE_NAME,
-      Key: {
-        filename: { S: props.originalname },
-      },
+    const downloadParams = {
+      Key: `inhouse_2/${props.originalname}`,
+      Bucket: AWS_BUCKET_NAME,
     };
-
-    db_client
-      .getItem(readParams)
-      .promise()
-      .then((data) => {
-        console.log(`Read Success: ${JSON.stringify(data.Item)}`);
-        const downloadParams = {
-          Key: data.Item.key.S,
-          Bucket: AWS_BUCKET_NAME,
-        };
-        s3.getObject(downloadParams).createReadStream().pipe(props.res);
-      })
-      .catch((err) => {
-        console.log(`Read Fail: ${err}`);
-      });
+    s3.getObject(downloadParams).createReadStream().pipe(props.res);
   },
 };
