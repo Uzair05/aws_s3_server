@@ -7,6 +7,7 @@ const multer = require("multer");
 
 const fs = require("fs");
 const util = require("util");
+const { time } = require("console");
 const unlink = util.promisify(fs.unlink);
 
 const upload = multer({ dest: "uploads/" });
@@ -14,6 +15,8 @@ const upload = multer({ dest: "uploads/" });
 const app = express();
 app.use(cors());
 const port = 8080;
+
+let timeme = 0;
 
 app.get("/image/download/:filename", (req, res) => {
   const filename = req.params.filename;
@@ -101,20 +104,6 @@ app.get("/api/days_back/", (req, res) => {
   }
 });
 
-/**
- * To insert boar sigthing into database.
- */
-app.put("/api/", (req, res) => {
-  const timestamp = req.query.timestamp;
-  const num_sighting = req.query.num_sighting;
-  // add to dynamo db
-  writeDB({
-    res: res,
-    num_sighting: num_sighting,
-    timestamp: timestamp,
-  });
-});
-
 const farm_details = {
   farm_1: {
     camera_1: {
@@ -136,6 +125,30 @@ app.get("/camera/:farm_id/:camera_id", (req, res) => {
       });
     }
   }
+});
+
+app.get("/toast", (req, res) => {
+  if (new Date().getTime() - timeme <= 5000) {
+    res.send({ alert: true });
+  } else {
+    res.send({ alert: false });
+  }
+});
+
+/**
+ * To insert boar sigthing into database.
+ */
+app.put("/api/", (req, res) => {
+  timeme = new Date().getTime();
+
+  const timestamp = req.query.timestamp;
+  const num_sighting = req.query.num_sighting;
+  // add to dynamo db
+  writeDB({
+    res: res,
+    num_sighting: num_sighting,
+    timestamp: timestamp,
+  });
 });
 
 app.listen(port, () => {
