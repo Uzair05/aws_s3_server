@@ -135,13 +135,13 @@ const writeDB = (props) => {
     })
     .catch((err) => {
       console.log(`Write Fail: ${err}`);
-      props.res.send(
-        `Fail: ${JSON.stringify({
+      props.res.send({
+        Fail: {
           id: { N: props.date },
           spotTime: { N: props.timestamp },
           num_sighting: { N: props.num_sighting },
-        })}`
-      );
+        },
+      });
     });
 };
 
