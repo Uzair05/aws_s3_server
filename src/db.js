@@ -130,8 +130,8 @@ const writeDB = (props) => {
     .putItem(writeParams)
     .promise()
     .then((data) => {
-      console.log(`Write Success: ${JSON.stringify(data)}`);
-      props.res.send(`Success: ${props.timestamp}`);
+      console.log(`Write Success`);
+      props.res.send({ Success: props.timestamp });
     })
     .catch((err) => {
       console.log(`Write Fail: ${err}`);
