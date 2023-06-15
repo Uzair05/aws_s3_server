@@ -44,7 +44,7 @@ module.exports = {
 
   downloadS3: (props) => {
     const downloadParams = {
-      Key: props.originalname,
+      Key: `inhouse_2/${props.originalname}`,
       Bucket: AWS_BUCKET_NAME,
     };
     s3.getObject(downloadParams).createReadStream().pipe(props.res);
