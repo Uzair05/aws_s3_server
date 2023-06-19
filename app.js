@@ -151,12 +151,9 @@ app.put("/api/", (req, res) => {
     timestamp: timestamp,
   });
 
-  function turnOffAlert_() {
-    setTimeout(() => {
-      turnOffAlert();
-    }, 3000);
-  }
-  turnOffAlert_();
+  setTimeout(() => {
+    turnOffAlert();
+  }, 3000);
 });
 
 app.listen(port, () => {
