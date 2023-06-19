@@ -2,6 +2,7 @@ const express = require("express");
 const { uploadS3, downloadS3 } = require("./src/s3");
 const { readDB, writeDB, readDB_func, readDB_func_recur } = require("./src/db");
 const { getHls } = require("./src/hls");
+const { turnOffAlert } = require("./src/iot");
 var cors = require("cors");
 const multer = require("multer");
 
@@ -149,6 +150,13 @@ app.put("/api/", (req, res) => {
     num_sighting: num_sighting,
     timestamp: timestamp,
   });
+
+  function turnOffAlert_() {
+    setTimeout(() => {
+      turnOffAlert();
+    }, 3000);
+  }
+  turnOffAlert_();
 });
 
 app.listen(port, () => {
