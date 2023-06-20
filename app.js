@@ -153,10 +153,6 @@ app.put("/api/", (req, res) => {
     num_sighting: num_sighting,
     timestamp: timestamp,
   });
-
-  setTimeout(() => {
-    turnOffAlert();
-  }, 3000);
 });
 
 app.listen(port, () => {
