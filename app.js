@@ -1,17 +1,9 @@
 const express = require("express");
-const { uploadS3, downloadS3 } = require("./src/s3");
+const { downloadS3 } = require("./src/s3");
 const { readDB, writeDB, readDB_func, readDB_func_recur } = require("./src/db");
 const { getHls } = require("./src/hls");
 const { turnOffAlert } = require("./src/iot");
 var cors = require("cors");
-const multer = require("multer");
-
-const fs = require("fs");
-const util = require("util");
-const { time } = require("console");
-const unlink = util.promisify(fs.unlink);
-
-const upload = multer({ dest: "uploads/" });
 
 const port = 8080;
 let timeme = 0;
@@ -19,16 +11,36 @@ let timeme = 0;
 const app = express();
 app.use(cors());
 
+/**
+ * Constant values which should be replaced by a database read
+ *  */
+const farm_details = {
+  farm_1: {
+    camera_1: {
+      stream_arn:
+        "arn:aws:kinesisvideo:ap-southeast-1:733421296020:stream/boar_camera_inhouse_2/1685341936560",
+    },
+    camera_2: {
+      stream_arn:
+        "arn:aws:kinesisvideo:ap-southeast-1:733421296020:stream/boar_camera_inhouse_2/1685341936560",
+    },
+  },
+  farm_2: {
+    camera_1: {
+      stream_arn:
+        "arn:aws:kinesisvideo:ap-southeast-1:733421296020:stream/boar_camera_inhouse_2/1685341936560",
+    },
+    camera_2: {
+      stream_arn:
+        "arn:aws:kinesisvideo:ap-southeast-1:733421296020:stream/boar_camera_inhouse_2/1685341936560",
+    },
+  },
+};
+
 app.get("/image/download/:filename", (req, res) => {
   const filename = req.params.filename;
   downloadS3({ originalname: filename, res: res });
 });
-
-// app.post("/image/upload/", upload.single("image"), async (req, res) => {
-//   const result = await uploadS3(req.file);
-//   await unlink(req.file.path);
-//   res.send(JSON.stringify(result));
-// });
 
 app.get("/api/", (req, res) => {
   const ur = req.query.upperLimit;
@@ -104,15 +116,6 @@ app.get("/api/days_back/", (req, res) => {
     });
   }
 });
-
-const farm_details = {
-  farm_1: {
-    camera_1: {
-      stream_arn:
-        "arn:aws:kinesisvideo:ap-southeast-1:733421296020:stream/boar_camera_inhouse_2/1685341936560",
-    },
-  },
-};
 
 app.get("/camera/:farm_id/:camera_id", (req, res) => {
   const farm_id = req.params.farm_id;
